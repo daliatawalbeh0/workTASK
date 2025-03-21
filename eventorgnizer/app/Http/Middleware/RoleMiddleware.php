@@ -10,10 +10,11 @@ class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, $role)
     {
-        if (!Auth::check() || Auth::user()->role_id != $role) {
-            return redirect()->route('dashboard')->with('error', 'Unauthorized access!');
+        // Check if user has the required role
+        if (Auth::user() && Auth::user()->role == $role) {
+            return $next($request);
         }
 
-        return $next($request);
+        return response()->json(['message' => 'Forbidden'], 403);
     }
 }

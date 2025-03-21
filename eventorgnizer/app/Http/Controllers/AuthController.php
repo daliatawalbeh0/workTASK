@@ -36,24 +36,29 @@ class AuthController extends Controller
 
     public function loginUser(Request $request)
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
-
+        // Validate the credentials
+        $credentials = $request->only('email', 'password');
+    
+        // Check if the credentials are valid
         if (Auth::attempt($credentials)) {
+            // Get the authenticated user
             $user = Auth::user();
-
-            return match ($user->role_id) {
-                1 => redirect()->route('admin')->with('success', 'Welcome ' . $user->name . '!'),
-                2 => redirect()->route('manager')->with('success', 'Welcome ' . $user->name . '!'),
-                3 => redirect()->route('user')->with('success', 'Welcome ' . $user->name . '!'),
-                default => redirect()->route('dashboard')->with('success', 'Welcome ' . $user->name . '!'),
-            };
+    
+            // Create a token for the user
+            $token = $user->createToken('YourAppName')->plainTextToken;
+    
+            // Return the token and user data as a JSON response
+            return response()->json([
+                'token' => $token,
+                'user' => $user,
+            ]);
         }
-
-        return back()->withErrors(['email' => 'Invalid credentials'])->withInput();
+    
+        // If authentication fails, return a 401 response
+        return response()->json(['message' => 'Invalid credentials'], 401);
     }
+    
+    
 
     public function logoutUser(Request $request)
     {
